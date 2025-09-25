@@ -3,13 +3,6 @@ import { Location } from '../types/location';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
-const axiosInstance = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
 export const api = {
   getLocations: async (): Promise<Location[]> => {
     const response = await axios.get(`${API_URL}/locations`);

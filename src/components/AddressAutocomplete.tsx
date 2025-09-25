@@ -136,6 +136,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       observer.disconnect();
       clearInterval(valueWatcher);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoaded]); // Remove onChange and onPlaceSelect from dependencies to avoid re-creating
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

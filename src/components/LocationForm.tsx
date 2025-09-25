@@ -1,5 +1,5 @@
 import { useForm, Controller } from 'react-hook-form';
-import { Location, BusinessHours } from '../types/location';
+import { Location } from '../types/location';
 import { useState, useEffect } from 'react';
 import AddressAutocomplete from './AddressAutocomplete';
 
