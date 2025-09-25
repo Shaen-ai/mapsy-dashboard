@@ -58,7 +58,6 @@ jobs:
             rm -rf $TARGET_DIR/*
             mv /tmp/dashboard-dist/* $TARGET_DIR/
             chown -R www-data:www-data $TARGET_DIR
-            chmod -R 755 $TARGET_DIR
             rm -rf /tmp/dashboard-dist
           "
 
