@@ -33,7 +33,7 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
-          REACT_APP_API_URL: https://mapsy-api.nextechspires.com
+          REACT_APP_API_URL: https://mapsy-api.nextechspires.com/api
 
       - name: Deploy to production server
         env:
