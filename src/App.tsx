@@ -4,7 +4,6 @@ import LocationList from './components/LocationList';
 import LocationForm from './components/LocationForm';
 import { api } from './services/api';
 import { Location } from './types/location';
-import './App.css';
 
 function App() {
   const [locations, setLocations] = useState<Location[]>([]);
