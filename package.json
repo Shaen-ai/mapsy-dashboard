@@ -22,7 +22,8 @@
   "scripts": {
     "start": "react-scripts start",
     "dev": "PORT=3001 react-scripts start",
-    "build": "GENERATE_SOURCEMAP=false react-scripts build",
+    "build": "node scripts/build-with-timestamp.js",
+    "build:standard": "GENERATE_SOURCEMAP=false react-scripts build",
     "serve:build": "npx serve -s build -l 3002",
     "preview": "npm run build && npm run serve:build"
   },

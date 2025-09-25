@@ -1,7 +1,9 @@
 import axios from 'axios';
 import { Location } from '../types/location';
 
+// Production API URL with /api prefix - v1.0.2
 const API_URL = process.env.REACT_APP_API_URL || 'https://mapsy-api.nextechspires.com/api';
+console.log('[Mapsy Dashboard] API URL:', API_URL);
 
 export const api = {
   getLocations: async (): Promise<Location[]> => {
