@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
+import { Toaster, toast } from 'react-hot-toast';
 import LocationList from './components/LocationList';
 import LocationForm from './components/LocationForm';
+import ConfirmationModal from './components/ConfirmationModal';
 import { api } from './services/api';
 import { Location } from './types/location';
 
@@ -10,6 +12,10 @@ function App() {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [isAddingLocation, setIsAddingLocation] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; locationId: string | null }>({
+    isOpen: false,
+    locationId: null
+  });
 
   useEffect(() => {
     fetchLocations();
@@ -32,9 +38,10 @@ function App() {
       const newLocation = await api.createLocation(formData);
       setLocations([...locations, newLocation]);
       setIsAddingLocation(false);
+      toast.success('Location created successfully!');
     } catch (error) {
       console.error('Failed to create location:', error);
-      alert('Failed to create location. Please try again.');
+      toast.error('Failed to create location. Please try again.');
     }
   };
 
@@ -49,23 +56,28 @@ function App() {
       setSelectedLocation(null);
     } catch (error) {
       console.error('Failed to update location:', error);
-      alert('Failed to update location. Please try again.');
+      toast.error('Failed to update location. Please try again.');
     }
   };
 
-  const handleDeleteLocation = async (id: string | number) => {
+  const handleDeleteLocation = (id: string | number) => {
     const idString = String(id);
-    if (!window.confirm('Are you sure you want to delete this location?')) return;
+    setDeleteModal({ isOpen: true, locationId: idString });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteModal.locationId) return;
 
     try {
-      await api.deleteLocation(idString);
-      setLocations(locations.filter((loc) => loc._id !== idString));
-      if (selectedLocation?._id === idString) {
+      await api.deleteLocation(deleteModal.locationId);
+      setLocations(locations.filter((loc) => loc._id !== deleteModal.locationId));
+      if (selectedLocation?._id === deleteModal.locationId) {
         setSelectedLocation(null);
       }
+      toast.success('Location deleted successfully');
     } catch (error) {
       console.error('Failed to delete location:', error);
-      alert('Failed to delete location. Please try again.');
+      toast.error('Failed to delete location. Please try again.');
     }
   };
 
@@ -136,6 +148,18 @@ function App() {
           )}
         </div>
       </main>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, locationId: null })}
+        onConfirm={confirmDelete}
+        title="Delete Location"
+        message="Are you sure you want to delete this location? This action cannot be undone."
+        confirmText="Delete Location"
+        cancelText="Keep Location"
+        type="danger"
+      />
     </div>
   );
 }
