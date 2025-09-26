@@ -54,6 +54,7 @@ function App() {
         loc._id === updatedLocation._id ? updatedLocation : loc
       ));
       setSelectedLocation(null);
+      toast.success('Location updated successfully!');
     } catch (error) {
       console.error('Failed to update location:', error);
       toast.error('Failed to update location. Please try again.');
@@ -83,6 +84,27 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/40">
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+          success: {
+            style: {
+              background: '#10B981',
+            },
+          },
+          error: {
+            style: {
+              background: '#EF4444',
+            },
+          },
+        }}
+      />
+
       {/* Header */}
       <header className="bg-white/95 backdrop-blur-sm border-b border-gray-200/60 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
