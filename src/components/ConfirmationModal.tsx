@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiAlertTriangle, FiX } from 'react-icons/fi';
+import { AlertTriangle, X } from 'lucide-react';
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -67,7 +67,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         <div className="p-6 pb-4">
           <div className="flex items-start">
             <div className={`p-3 rounded-full ${colors.icon} flex-shrink-0`}>
-              <FiAlertTriangle className="h-6 w-6" />
+              <AlertTriangle className="h-6 w-6" />
             </div>
             <div className="ml-4 flex-1">
               <h3 className="text-lg font-semibold text-gray-900">
@@ -81,7 +81,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
               onClick={onClose}
               className="ml-4 text-gray-400 hover:text-gray-600 transition-colors"
             >
-              <FiX className="h-5 w-5" />
+              <X className="h-5 w-5" />
             </button>
           </div>
         </div>
