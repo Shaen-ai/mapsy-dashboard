@@ -1,24 +1,44 @@
 import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, AlertCircle } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import LocationList from './components/LocationList';
 import LocationForm from './components/LocationForm';
 import ConfirmationModal from './components/ConfirmationModal';
 import { api } from './services/api';
 import { Location } from './types/location';
+import { wixAuth } from './services/wixAuth';
 
 function App() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [isAddingLocation, setIsAddingLocation] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; locationId: string | null }>({
     isOpen: false,
     locationId: null
   });
 
   useEffect(() => {
-    fetchLocations();
+    // Initialize Wix authentication
+    const authState = wixAuth.initializeFromUrl();
+
+    // Check if we're in Wix environment (has instance token)
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasInstance = urlParams.has('instance');
+
+    if (hasInstance) {
+      if (!authState.isAuthenticated) {
+        setAuthError('Invalid or expired authentication token');
+        return;
+      }
+      fetchLocations();
+    } else {
+      // Allow access without Wix authentication for standalone mode
+      console.log('[Dashboard] Running in standalone mode (no instance token)');
+      fetchLocations();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchLocations = async () => {
@@ -82,6 +102,26 @@ function App() {
     }
   };
 
+  // Show authentication error if present
+  if (authError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/40 flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
+          <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+            <AlertCircle className="w-6 h-6 text-red-600" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 text-center mb-2">
+            Authentication Error
+          </h2>
+          <p className="text-gray-600 text-center mb-4">{authError}</p>
+          <p className="text-sm text-gray-500 text-center">
+            Please ensure you have a valid instance token in the URL.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/40">
       <Toaster
@@ -119,6 +159,11 @@ function App() {
                 Mapsy Dashboard
               </h1>
             </div>
+            {wixAuth.isAuthenticated() && wixAuth.getCompId() && (
+              <div className="text-sm text-gray-600">
+                Widget: <span className="font-mono font-semibold">{wixAuth.getCompId()}</span>
+              </div>
+            )}
           </div>
         </div>
       </header>

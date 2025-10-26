@@ -1,18 +1,46 @@
 import axios from 'axios';
 import { Location } from '../types/location';
+import { wixAuth } from './wixAuth';
 
 // Production API URL with /api prefix - v1.0.2
 const API_URL = process.env.REACT_APP_API_URL || 'https://mapsy-api.nextechspires.com/api';
 console.log('[Mapsy Dashboard] API URL:', API_URL);
 
+// Create axios instance with interceptors
+const apiClient = axios.create({
+  baseURL: API_URL,
+});
+
+// Add request interceptor to include Wix instance token
+apiClient.interceptors.request.use(
+  (config) => {
+    const instanceToken = wixAuth.getInstanceToken();
+    const compId = wixAuth.getCompId();
+
+    if (instanceToken) {
+      config.headers.Authorization = `Bearer ${instanceToken}`;
+      console.log('[API] Added Wix instance token to request');
+    }
+
+    if (compId) {
+      config.headers['X-Wix-Comp-Id'] = compId;
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 export const api = {
   getLocations: async (): Promise<Location[]> => {
-    const response = await axios.get(`${API_URL}/locations`);
+    const response = await apiClient.get('/locations');
     return response.data;
   },
 
   createLocation: async (location: FormData): Promise<Location> => {
-    const response = await axios.post(`${API_URL}/locations`, location, {
+    const response = await apiClient.post('/locations', location, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -21,7 +49,7 @@ export const api = {
   },
 
   updateLocation: async (id: string, location: FormData): Promise<Location> => {
-    const response = await axios.post(`${API_URL}/locations/${id}`, location, {
+    const response = await apiClient.post(`/locations/${id}`, location, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -30,7 +58,7 @@ export const api = {
   },
 
   deleteLocation: async (id: string): Promise<void> => {
-    await axios.delete(`${API_URL}/locations/${id}`);
+    await apiClient.delete(`/locations/${id}`);
   },
 };
 
@@ -41,7 +69,7 @@ export const locationService = {
   },
 
   getOne: async (id: string | number): Promise<Location> => {
-    const response = await axios.get(`${API_URL}/locations/${id}`);
+    const response = await apiClient.get(`/locations/${id}`);
     return response.data;
   },
 
