@@ -33,7 +33,22 @@ apiClient.interceptors.request.use(
   }
 );
 
+// Widget type for the widget selector
+export interface Widget {
+  compId: string;
+  widgetName: string;
+  defaultView: 'map' | 'list';
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const api = {
+  // Get all widgets for the current instance
+  getWidgets: async (): Promise<Widget[]> => {
+    const response = await apiClient.get('/widgets');
+    return response.data;
+  },
+
   getLocations: async (): Promise<Location[]> => {
     const response = await apiClient.get('/locations');
     return response.data;

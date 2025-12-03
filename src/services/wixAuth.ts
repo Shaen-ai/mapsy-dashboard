@@ -74,6 +74,14 @@ class WixAuthService {
   }
 
   /**
+   * Set component ID (used when user selects a widget from the selector)
+   */
+  setCompId(compId: string): void {
+    this.state.compId = compId;
+    console.log('[WixAuth] Component ID set:', compId);
+  }
+
+  /**
    * Check if user is authenticated
    */
   isAuthenticated(): boolean {

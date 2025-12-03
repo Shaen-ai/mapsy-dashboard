@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Plus, AlertCircle } from 'lucide-react';
+import { Plus, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import LocationList from './components/LocationList';
 import LocationForm from './components/LocationForm';
 import ConfirmationModal from './components/ConfirmationModal';
+import WidgetSelector from './components/WidgetSelector';
 import { api } from './services/api';
 import { Location } from './types/location';
 import { wixAuth } from './services/wixAuth';
+
+type DashboardState = 'loading' | 'widget-selector' | 'locations';
 
 function App() {
   const [locations, setLocations] = useState<Location[]>([]);
@@ -14,6 +17,7 @@ function App() {
   const [isAddingLocation, setIsAddingLocation] = useState(false);
   const [loading, setLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [dashboardState, setDashboardState] = useState<DashboardState>('loading');
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; locationId: string | null }>({
     isOpen: false,
     locationId: null
@@ -26,20 +30,47 @@ function App() {
     // Check if we're in Wix environment (has instance token)
     const urlParams = new URLSearchParams(window.location.search);
     const hasInstance = urlParams.has('instance');
+    const hasCompId = urlParams.has('compId');
 
     if (hasInstance) {
       if (!authState.isAuthenticated) {
         setAuthError('Invalid or expired authentication token');
         return;
       }
-      fetchLocations();
+
+      // If we have compId, go directly to locations
+      if (hasCompId) {
+        setDashboardState('locations');
+        fetchLocations();
+      } else {
+        // No compId - show widget selector
+        console.log('[Dashboard] No compId in URL, showing widget selector');
+        setDashboardState('widget-selector');
+      }
     } else {
       // Allow access without Wix authentication for standalone mode
       console.log('[Dashboard] Running in standalone mode (no instance token)');
+      setDashboardState('locations');
       fetchLocations();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleWidgetSelected = (compId: string) => {
+    console.log('[Dashboard] Widget selected:', compId);
+    setDashboardState('locations');
+    fetchLocations();
+  };
+
+  const handleBackToWidgetSelector = () => {
+    // Remove compId from URL and go back to widget selector
+    const url = new URL(window.location.href);
+    url.searchParams.delete('compId');
+    window.history.pushState({}, '', url.toString());
+    wixAuth.setCompId('');
+    setDashboardState('widget-selector');
+    setLocations([]);
+  };
 
   const fetchLocations = async () => {
     setLoading(true);
@@ -122,6 +153,20 @@ function App() {
     );
   }
 
+  // Show widget selector when no compId is provided
+  if (dashboardState === 'widget-selector') {
+    return <WidgetSelector onSelect={handleWidgetSelected} />;
+  }
+
+  // Show loading state
+  if (dashboardState === 'loading') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/40 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/40">
       <Toaster
@@ -160,8 +205,17 @@ function App() {
               </h1>
             </div>
             {wixAuth.isAuthenticated() && wixAuth.getCompId() && (
-              <div className="text-sm text-gray-600">
-                Widget: <span className="font-mono font-semibold">{wixAuth.getCompId()}</span>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={handleBackToWidgetSelector}
+                  className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 transition"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-1" />
+                  Switch Widget
+                </button>
+                <div className="text-sm text-gray-600">
+                  Widget: <span className="font-mono font-semibold">{wixAuth.getCompId()}</span>
+                </div>
               </div>
             )}
           </div>
