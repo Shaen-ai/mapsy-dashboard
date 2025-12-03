@@ -9,6 +9,75 @@ interface LocationFormProps {
   onCancel: () => void;
 }
 
+interface DayHours {
+  isClosed: boolean;
+  openTime: string;
+  closeTime: string;
+}
+
+type BusinessHoursState = Record<string, DayHours>;
+
+// Parse "9:00 AM - 5:00 PM" or "Closed" into structured format
+const parseBusinessHours = (hoursString: string): DayHours => {
+  if (!hoursString || hoursString.toLowerCase() === 'closed') {
+    return { isClosed: true, openTime: '09:00', closeTime: '17:00' };
+  }
+
+  // Try to parse "HH:MM AM/PM - HH:MM AM/PM" format
+  const match = hoursString.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+  if (match) {
+    let openHour = parseInt(match[1]);
+    const openMin = match[2];
+    const openPeriod = match[3]?.toUpperCase();
+    let closeHour = parseInt(match[4]);
+    const closeMin = match[5];
+    const closePeriod = match[6]?.toUpperCase();
+
+    // Convert to 24-hour format
+    if (openPeriod === 'PM' && openHour !== 12) openHour += 12;
+    if (openPeriod === 'AM' && openHour === 12) openHour = 0;
+    if (closePeriod === 'PM' && closeHour !== 12) closeHour += 12;
+    if (closePeriod === 'AM' && closeHour === 12) closeHour = 0;
+
+    return {
+      isClosed: false,
+      openTime: `${openHour.toString().padStart(2, '0')}:${openMin}`,
+      closeTime: `${closeHour.toString().padStart(2, '0')}:${closeMin}`,
+    };
+  }
+
+  // Default if parsing fails
+  return { isClosed: false, openTime: '09:00', closeTime: '17:00' };
+};
+
+// Convert 24-hour time to 12-hour format string
+const formatTimeToString = (time24: string): string => {
+  const [hourStr, min] = time24.split(':');
+  let hour = parseInt(hourStr);
+  const period = hour >= 12 ? 'PM' : 'AM';
+  if (hour > 12) hour -= 12;
+  if (hour === 0) hour = 12;
+  return `${hour}:${min} ${period}`;
+};
+
+// Convert DayHours to display string
+const formatDayHours = (dayHours: DayHours): string => {
+  if (dayHours.isClosed) return 'Closed';
+  return `${formatTimeToString(dayHours.openTime)} - ${formatTimeToString(dayHours.closeTime)}`;
+};
+
+// Days of the week constants
+const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+const dayLabels: Record<string, string> = {
+  mon: 'Monday',
+  tue: 'Tuesday',
+  wed: 'Wednesday',
+  thu: 'Thursday',
+  fri: 'Friday',
+  sat: 'Saturday',
+  sun: 'Sunday',
+};
+
 const LocationForm: React.FC<LocationFormProps> = ({ location, onSubmit, onCancel }) => {
   const { register, handleSubmit, control, setValue, watch, formState: { errors } } = useForm<Location>({
     defaultValues: location || {
@@ -36,6 +105,38 @@ const LocationForm: React.FC<LocationFormProps> = ({ location, onSubmit, onCance
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>(location?.image_url || '');
+
+  // Business hours state for timepickers
+  const [businessHours, setBusinessHours] = useState<BusinessHoursState>(() => {
+    const defaultHours = location?.business_hours || {
+      mon: '9:00 AM - 5:00 PM',
+      tue: '9:00 AM - 5:00 PM',
+      wed: '9:00 AM - 5:00 PM',
+      thu: '9:00 AM - 5:00 PM',
+      fri: '9:00 AM - 5:00 PM',
+      sat: 'Closed',
+      sun: 'Closed',
+    };
+    const parsed: BusinessHoursState = {};
+    days.forEach(day => {
+      parsed[day] = parseBusinessHours(defaultHours[day as keyof typeof defaultHours] || 'Closed');
+    });
+    return parsed;
+  });
+
+  // Update form values when business hours change
+  const updateBusinessHours = (day: string, field: keyof DayHours, value: string | boolean) => {
+    setBusinessHours(prev => {
+      const updated = {
+        ...prev,
+        [day]: { ...prev[day], [field]: value }
+      };
+      // Update form value with formatted string
+      const formatted = formatDayHours(updated[day]);
+      setValue(`business_hours.${day}` as any, formatted);
+      return updated;
+    });
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -73,17 +174,6 @@ const LocationForm: React.FC<LocationFormProps> = ({ location, onSubmit, onCance
     }
 
     onSubmit(formData);
-  };
-
-  const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-  const dayLabels: Record<string, string> = {
-    mon: 'Monday',
-    tue: 'Tuesday',
-    wed: 'Wednesday',
-    thu: 'Thursday',
-    fri: 'Friday',
-    sat: 'Saturday',
-    sun: 'Sunday',
   };
 
   return (
@@ -211,16 +301,42 @@ const LocationForm: React.FC<LocationFormProps> = ({ location, onSubmit, onCance
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Business Hours
         </label>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-3">
           {days.map((day) => (
-            <div key={day} className="flex items-center gap-2">
-              <label className="w-20 text-sm text-gray-600">
-                {dayLabels[day]}:
+            <div key={day} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
+              <label className="w-24 text-sm font-medium text-gray-700">
+                {dayLabels[day]}
               </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={businessHours[day]?.isClosed || false}
+                  onChange={(e) => updateBusinessHours(day, 'isClosed', e.target.checked)}
+                  className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-600">Closed</span>
+              </label>
+              {!businessHours[day]?.isClosed && (
+                <div className="flex items-center gap-2 flex-1">
+                  <input
+                    type="time"
+                    value={businessHours[day]?.openTime || '09:00'}
+                    onChange={(e) => updateBusinessHours(day, 'openTime', e.target.value)}
+                    className="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  />
+                  <span className="text-gray-500">to</span>
+                  <input
+                    type="time"
+                    value={businessHours[day]?.closeTime || '17:00'}
+                    onChange={(e) => updateBusinessHours(day, 'closeTime', e.target.value)}
+                    className="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  />
+                </div>
+              )}
+              {/* Hidden input for form submission */}
               <input
+                type="hidden"
                 {...register(`business_hours.${day}` as any)}
-                className="flex-1 px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                placeholder="9:00 AM - 5:00 PM or Closed"
               />
             </div>
           ))}
