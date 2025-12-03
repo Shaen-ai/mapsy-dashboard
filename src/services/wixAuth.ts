@@ -123,7 +123,12 @@ class WixAuthService {
 
     // Fallback: Add instance token manually
     if (this.state.instanceToken) {
-      headers['Authorization'] = `Bearer ${this.state.instanceToken}`;
+      // Check if token already has a prefix (OauthNG.JWS. or Bearer)
+      if (this.state.instanceToken.startsWith('OauthNG.') || this.state.instanceToken.startsWith('Bearer ')) {
+        headers['Authorization'] = this.state.instanceToken;
+      } else {
+        headers['Authorization'] = `Bearer ${this.state.instanceToken}`;
+      }
       console.log('[WixAuth] Added manual Authorization header');
     }
 
