@@ -1,4 +1,10 @@
-import { jwtDecode } from 'jwt-decode';
+/**
+ * Wix Authentication Service for Dashboard
+ * Uses Wix SDK with dashboard.auth() and dashboard.host() for authenticated requests
+ */
+
+import { createClient } from '@wix/sdk';
+import { dashboard } from '@wix/dashboard';
 
 interface WixAuthState {
   instanceToken: string | null;
@@ -6,6 +12,9 @@ interface WixAuthState {
   decodedInstance: any | null;
   isAuthenticated: boolean;
 }
+
+let wixClient: ReturnType<typeof createClient> | null = null;
+let isInitialized = false;
 
 class WixAuthService {
   private state: WixAuthState = {
@@ -16,40 +25,115 @@ class WixAuthService {
   };
 
   /**
-   * Initialize authentication from URL parameters
+   * Initialize authentication from URL parameters and Wix SDK
    */
   initializeFromUrl(): WixAuthState {
     const urlParams = new URLSearchParams(window.location.search);
     const instanceToken = urlParams.get('instance');
     const compId = urlParams.get('compId');
 
-    if (!instanceToken) {
-      console.warn('[WixAuth] No instance token found in URL');
-      return this.state;
+    // Store URL params
+    this.state.instanceToken = instanceToken;
+    this.state.compId = compId;
+
+    if (instanceToken) {
+      this.state.isAuthenticated = true;
+      console.log('[WixAuth] Instance token found in URL');
+    }
+
+    if (compId) {
+      console.log('[WixAuth] Component ID:', compId);
+    }
+
+    // Initialize Wix SDK
+    this.initializeWixClient();
+
+    return this.state;
+  }
+
+  /**
+   * Initialize Wix client with dashboard.auth() and dashboard.host()
+   */
+  private async initializeWixClient(): Promise<void> {
+    if (isInitialized && wixClient) {
+      console.log('[WixAuth] Wix client already initialized');
+      return;
     }
 
     try {
-      // Decode instance token (client-side only for display, NEVER trust for security)
-      const decoded = jwtDecode(instanceToken);
-      console.log('[WixAuth] Decoded instance (client-side, unsigned):', decoded);
+      console.log('[WixAuth] Initializing Wix SDK...');
+      console.log('[WixAuth] dashboard.auth available:', !!dashboard.auth);
+      console.log('[WixAuth] dashboard.host available:', !!dashboard.host);
 
-      this.state = {
-        instanceToken,
-        compId,
-        decodedInstance: decoded,
-        isAuthenticated: true,
-      };
+      // Create Wix client with dashboard auth and host
+      wixClient = createClient({
+        auth: dashboard.auth(),
+        host: dashboard.host(),
+      });
 
-      console.log('[WixAuth] Authentication initialized');
-      if (compId) {
-        console.log('[WixAuth] Component ID:', compId);
-      }
-
-      return this.state;
+      isInitialized = true;
+      console.log('[WixAuth] Wix client created successfully');
+      console.log('[WixAuth] fetchWithAuth available:', typeof wixClient.fetchWithAuth);
     } catch (error) {
-      console.error('[WixAuth] Failed to decode instance token:', error);
-      return this.state;
+      console.error('[WixAuth] Failed to initialize Wix client:', error);
+      // Continue without Wix SDK - will fallback to URL instance token
     }
+  }
+
+  /**
+   * Fetch with Wix authentication
+   * Uses wixClient.fetchWithAuth() to automatically include access token
+   */
+  async fetchWithAuth(url: string, options?: RequestInit): Promise<Response> {
+    console.log('[WixAuth] fetchWithAuth to:', url);
+
+    const headers: Record<string, string> = {
+      ...(options?.headers as Record<string, string>),
+    };
+
+    // Add compId header if available
+    if (this.state.compId) {
+      headers['X-Wix-Comp-Id'] = this.state.compId;
+      console.log('[WixAuth] Added X-Wix-Comp-Id header:', this.state.compId);
+    }
+
+    // Don't set Content-Type for FormData - let browser set it with boundary
+    const isFormData = options?.body instanceof FormData;
+    if (!isFormData) {
+      headers['Content-Type'] = 'application/json';
+    }
+
+    const fetchOptions: RequestInit = {
+      ...options,
+      headers,
+    };
+
+    // Use Wix authenticated fetch if available
+    if (wixClient && wixClient.fetchWithAuth) {
+      console.log('[WixAuth] Using wixClient.fetchWithAuth...');
+      try {
+        const response = await wixClient.fetchWithAuth(url, fetchOptions);
+        console.log('[WixAuth] fetchWithAuth response:', response.status);
+        return response;
+      } catch (error: any) {
+        console.error('[WixAuth] wixClient.fetchWithAuth failed:', error?.message);
+        console.log('[WixAuth] Falling back to manual token...');
+      }
+    }
+
+    // Fallback: Add instance token manually
+    if (this.state.instanceToken) {
+      headers['Authorization'] = `Bearer ${this.state.instanceToken}`;
+      console.log('[WixAuth] Added manual Authorization header');
+    }
+
+    console.log('[WixAuth] Using regular fetch...');
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
+    console.log('[WixAuth] Response:', response.status);
+    return response;
   }
 
   /**
@@ -60,7 +144,7 @@ class WixAuthService {
   }
 
   /**
-   * Get instance token for API calls
+   * Get instance token for API calls (fallback)
    */
   getInstanceToken(): string | null {
     return this.state.instanceToken;
