@@ -10,6 +10,9 @@ interface AddressAutocompleteProps {
   error?: string;
 }
 
+// Cache the loader promise to avoid reloading Google Maps
+let loaderPromise: Promise<typeof google> | null = null;
+
 const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   value,
   onChange,
@@ -32,25 +35,26 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     const apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 
     if (!apiKey) {
-      console.error('Google Maps API key is missing. Please add REACT_APP_GOOGLE_MAPS_API_KEY to your .env file');
+      console.error('Google Maps API key is missing');
       return;
     }
 
-    const loader = new Loader({
-      apiKey,
-      version: 'weekly',
-      libraries: ['places'],
-    });
+    // Use cached loader promise if available
+    if (!loaderPromise) {
+      const loader = new Loader({
+        apiKey,
+        version: 'weekly',
+        libraries: ['places'],
+      });
+      loaderPromise = loader.load();
+    }
 
-    loader
-      .load()
+    loaderPromise
       .then(() => {
-        console.log('Google Maps Places API loaded successfully');
         setIsLoaded(true);
       })
       .catch((error) => {
         console.error('Error loading Google Maps:', error);
-        // If there's an error, we can still allow manual input
         setIsLoaded(false);
       });
   }, []);
@@ -69,23 +73,17 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     // Add place changed listener
     autocompleteRef.current.addListener('place_changed', () => {
       const place = autocompleteRef.current?.getPlace();
-      console.log('🗺️ Place changed event fired, place:', place);
 
       if (place && place.formatted_address) {
         isSelectingRef.current = true;
         const fullAddress = place.formatted_address;
-        console.log('✅ Selected address from autocomplete:', fullAddress);
 
-        // Update internal value
         setInternalValue(fullAddress);
 
-        // Update the input value directly
         if (inputRef.current) {
           inputRef.current.value = fullAddress;
         }
 
-        // Update the parent state immediately
-        console.log('📤 Calling onChange with:', fullAddress);
         onChange(fullAddress);
 
         if (onPlaceSelect) {
@@ -95,66 +93,28 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         setTimeout(() => {
           isSelectingRef.current = false;
         }, 100);
-      } else {
-        console.log('⚠️ No formatted_address in place object');
       }
     });
-
-    // Create a MutationObserver to watch for value changes
-    const observer = new MutationObserver(() => {
-      const currentValue = input.value;
-      if (currentValue !== internalValue && currentValue.length > 0) {
-        console.log('🔮 MutationObserver detected value change to:', currentValue);
-        setInternalValue(currentValue);
-        onChange(currentValue);
-      }
-    });
-
-    // Observe value attribute changes
-    observer.observe(input, {
-      attributes: true,
-      attributeFilter: ['value'],
-    });
-
-    // Also watch for property changes (Google might change value property directly)
-    let lastValue = input.value;
-    const valueWatcher = setInterval(() => {
-      if (input.value !== lastValue) {
-        lastValue = input.value;
-        if (input.value !== internalValue && input.value.length > 0) {
-          console.log('⏰ Interval detected value change to:', input.value);
-          setInternalValue(input.value);
-          onChange(input.value);
-        }
-      }
-    }, 100);
 
     return () => {
       if (autocompleteRef.current) {
         google.maps.event.clearInstanceListeners(autocompleteRef.current);
       }
-      observer.disconnect();
-      clearInterval(valueWatcher);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoaded]); // Remove onChange and onPlaceSelect from dependencies to avoid re-creating
+  }, [isLoaded]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    console.log('⌨️ Input changed to:', newValue);
     setInternalValue(newValue);
 
     // Delay updating parent to avoid conflicts with autocomplete
     if (!isSelectingRef.current) {
-      // Use a timeout to ensure autocomplete selection takes priority
       setTimeout(() => {
         if (!isSelectingRef.current) {
-          console.log('📤 Sending typed value to parent:', newValue);
           onChange(newValue);
         }
       }, 50);
-    } else {
-      console.log('🚫 Not updating parent - autocomplete is selecting');
     }
   };
 
@@ -164,31 +124,19 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       const pacContainer = document.querySelector('.pac-container');
       if (pacContainer && (pacContainer as HTMLElement).style.display !== 'none') {
         e.preventDefault();
-        // Force trigger the first suggestion selection
         const firstResult = pacContainer.querySelector('.pac-item') as HTMLElement;
         if (firstResult) {
-          console.log('🎯 Simulating click on first autocomplete result');
           firstResult.click();
         }
       }
-    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-      // Let Google handle arrow keys
-      console.log('⬆️⬇️ Arrow key pressed, letting Google handle it');
     }
   };
 
-  // Add focus/blur handlers to track selection state
-  const handleFocus = () => {
-    console.log('🔍 Input focused');
-  };
-
   const handleBlur = () => {
-    console.log('👋 Input blurred');
     // After blur, ensure the value is synced
     setTimeout(() => {
       const currentValue = inputRef.current?.value || '';
       if (currentValue !== internalValue) {
-        console.log('🔄 Syncing value after blur:', currentValue);
         setInternalValue(currentValue);
         onChange(currentValue);
       }
@@ -203,7 +151,6 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         value={internalValue}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
-        onFocus={handleFocus}
         onBlur={handleBlur}
         placeholder={placeholder}
         className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${

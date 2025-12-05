@@ -24,40 +24,41 @@ function App() {
   });
 
   useEffect(() => {
-    // Initialize Wix authentication
-    const authState = wixAuth.initializeFromUrl();
+    const initialize = async () => {
+      // Check URL params first
+      const urlParams = new URLSearchParams(window.location.search);
+      const hasInstance = urlParams.has('instance');
+      const hasCompId = urlParams.has('compId');
 
-    // Check if we're in Wix environment (has instance token)
-    const urlParams = new URLSearchParams(window.location.search);
-    const hasInstance = urlParams.has('instance');
-    const hasCompId = urlParams.has('compId');
+      // Initialize Wix authentication and wait for it to complete
+      const authState = await wixAuth.initializeFromUrl();
 
-    if (hasInstance) {
-      if (!authState.isAuthenticated) {
-        setAuthError('Invalid or expired authentication token');
-        return;
-      }
+      if (hasInstance) {
+        if (!authState.isAuthenticated) {
+          setAuthError('Invalid or expired authentication token');
+          return;
+        }
 
-      // If we have compId, go directly to locations
-      if (hasCompId) {
+        // If we have compId, go directly to locations
+        if (hasCompId) {
+          setDashboardState('locations');
+          fetchLocations();
+        } else {
+          // No compId - show widget selector
+          setDashboardState('widget-selector');
+        }
+      } else {
+        // Allow access without Wix authentication for standalone mode
         setDashboardState('locations');
         fetchLocations();
-      } else {
-        // No compId - show widget selector
-        console.log('[Dashboard] No compId in URL, showing widget selector');
-        setDashboardState('widget-selector');
       }
-    } else {
-      // Allow access without Wix authentication for standalone mode
-      console.log('[Dashboard] Running in standalone mode (no instance token)');
-      setDashboardState('locations');
-      fetchLocations();
-    }
+    };
+
+    initialize();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleWidgetSelected = (compId: string) => {
-    console.log('[Dashboard] Widget selected:', compId);
+  const handleWidgetSelected = () => {
     setDashboardState('locations');
     fetchLocations();
   };

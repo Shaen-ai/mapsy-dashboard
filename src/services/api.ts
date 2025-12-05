@@ -3,7 +3,6 @@ import { wixAuth } from './wixAuth';
 
 // Production API URL with /api prefix
 const API_URL = process.env.REACT_APP_API_URL || 'https://mapsy-api.nextechspires.com/api';
-console.log('[Mapsy Dashboard] API URL:', API_URL);
 
 /**
  * Make an authenticated API request using Wix fetchWithAuth
@@ -76,27 +75,5 @@ export const api = {
 
   deleteLocation: async (id: string): Promise<void> => {
     await apiRequest<void>(`/locations/${id}`, { method: 'DELETE' });
-  },
-};
-
-export const locationService = {
-  getAll: async (): Promise<Location[]> => {
-    return api.getLocations();
-  },
-
-  getOne: async (id: string | number): Promise<Location> => {
-    return apiRequest<Location>(`/locations/${id}`, { method: 'GET' });
-  },
-
-  create: async (formData: FormData): Promise<Location> => {
-    return api.createLocation(formData);
-  },
-
-  update: async (id: string | number, formData: FormData): Promise<Location> => {
-    return api.updateLocation(String(id), formData);
-  },
-
-  delete: async (id: string | number): Promise<void> => {
-    return api.deleteLocation(String(id));
   },
 };

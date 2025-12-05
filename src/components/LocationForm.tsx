@@ -1,6 +1,6 @@
 import { useForm, Controller } from 'react-hook-form';
 import { Location } from '../types/location';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import AddressAutocomplete from './AddressAutocomplete';
 
 interface LocationFormProps {
@@ -79,7 +79,7 @@ const dayLabels: Record<string, string> = {
 };
 
 const LocationForm: React.FC<LocationFormProps> = ({ location, onSubmit, onCancel }) => {
-  const { register, handleSubmit, control, setValue, watch, formState: { errors } } = useForm<Location>({
+  const { register, handleSubmit, control, setValue, formState: { errors } } = useForm<Location>({
     defaultValues: location || {
       category: 'store',
       business_hours: {
@@ -93,15 +93,6 @@ const LocationForm: React.FC<LocationFormProps> = ({ location, onSubmit, onCance
       },
     },
   });
-
-  // Watch all form fields
-  const watchedFields = watch();
-
-  // Log changes to form data
-  useEffect(() => {
-    console.log('📝 Form data changed:', watchedFields);
-    console.log('📍 Address field value:', watchedFields.address);
-  }, [watchedFields]);
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>(location?.image_url || '');
@@ -151,9 +142,6 @@ const LocationForm: React.FC<LocationFormProps> = ({ location, onSubmit, onCance
   };
 
   const onFormSubmit = (data: Location) => {
-    console.log('🚀 Form submitted with data:', data);
-    console.log('📍 Address being submitted:', data.address);
-
     const formData = new FormData();
 
     formData.append('name', data.name);
@@ -234,12 +222,8 @@ const LocationForm: React.FC<LocationFormProps> = ({ location, onSubmit, onCance
                 }
                 // Also store coordinates if available
                 if (place.geometry?.location) {
-                  const lat = place.geometry.location.lat();
-                  const lng = place.geometry.location.lng();
-                  console.log('📍 Coordinates from place:', { lat, lng });
-                  // Store these in hidden form fields or state if needed
+                  // Coordinates available: place.geometry.location.lat(), place.geometry.location.lng()
                 }
-                console.log('Place selected:', place);
               }}
             />
           )}
