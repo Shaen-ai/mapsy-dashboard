@@ -168,26 +168,26 @@ const LocationForm: React.FC<LocationFormProps> = ({ location, onSubmit, onCance
     <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Name *
           </label>
           <input
             {...register('name', { required: 'Name is required' })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
             placeholder="Business Name"
           />
           {errors.name && (
-            <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name.message}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Category *
           </label>
           <select
             {...register('category')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
             <option value="restaurant">Restaurant</option>
             <option value="store">Store</option>
@@ -199,7 +199,7 @@ const LocationForm: React.FC<LocationFormProps> = ({ location, onSubmit, onCance
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Address *
         </label>
         <Controller
@@ -232,18 +232,18 @@ const LocationForm: React.FC<LocationFormProps> = ({ location, onSubmit, onCance
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Phone
           </label>
           <input
             {...register('phone')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
             placeholder="(555) 123-4567"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Email
           </label>
           <input
@@ -253,16 +253,16 @@ const LocationForm: React.FC<LocationFormProps> = ({ location, onSubmit, onCance
                 message: 'Invalid email address',
               },
             })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
             placeholder="contact@business.com"
           />
           {errors.email && (
-            <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email.message}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Website
           </label>
           <input
@@ -272,23 +272,23 @@ const LocationForm: React.FC<LocationFormProps> = ({ location, onSubmit, onCance
                 message: 'Must start with http:// or https://',
               },
             })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
             placeholder="https://example.com"
           />
           {errors.website && (
-            <p className="mt-1 text-sm text-red-600">{errors.website.message}</p>
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.website.message}</p>
           )}
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Business Hours
         </label>
         <div className="space-y-3">
           {days.map((day) => (
-            <div key={day} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-              <label className="w-24 text-sm font-medium text-gray-700">
+            <div key={day} className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <label className="w-24 text-sm font-medium text-gray-700 dark:text-gray-300">
                 {dayLabels[day]}
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
@@ -296,9 +296,9 @@ const LocationForm: React.FC<LocationFormProps> = ({ location, onSubmit, onCance
                   type="checkbox"
                   checked={businessHours[day]?.isClosed || false}
                   onChange={(e) => updateBusinessHours(day, 'isClosed', e.target.checked)}
-                  className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 rounded border-gray-300 dark:border-gray-600 focus:ring-blue-500 bg-white dark:bg-gray-700"
                 />
-                <span className="text-sm text-gray-600">Closed</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">Closed</span>
               </label>
               {!businessHours[day]?.isClosed && (
                 <div className="flex items-center gap-2 flex-1">
@@ -306,14 +306,14 @@ const LocationForm: React.FC<LocationFormProps> = ({ location, onSubmit, onCance
                     type="time"
                     value={businessHours[day]?.openTime || '09:00'}
                     onChange={(e) => updateBusinessHours(day, 'openTime', e.target.value)}
-                    className="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
-                  <span className="text-gray-500">to</span>
+                  <span className="text-gray-500 dark:text-gray-400">to</span>
                   <input
                     type="time"
                     value={businessHours[day]?.closeTime || '17:00'}
                     onChange={(e) => updateBusinessHours(day, 'closeTime', e.target.value)}
-                    className="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
                 </div>
               )}
@@ -328,14 +328,14 @@ const LocationForm: React.FC<LocationFormProps> = ({ location, onSubmit, onCance
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Image
         </label>
         <input
           type="file"
           accept="image/*"
           onChange={handleImageChange}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-900/30 dark:file:text-blue-400"
         />
         {imagePreview && (
           <img
@@ -346,11 +346,11 @@ const LocationForm: React.FC<LocationFormProps> = ({ location, onSubmit, onCance
         )}
       </div>
 
-      <div className="flex justify-end gap-4 pt-4 border-t">
+      <div className="flex justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         <button
           type="button"
           onClick={onCancel}
-          className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+          className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
         >
           Cancel
         </button>

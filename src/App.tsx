@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Plus, AlertCircle, ArrowLeft, Moon, Sun } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import LocationList from './components/LocationList';
 import LocationForm from './components/LocationForm';
@@ -8,6 +8,7 @@ import WidgetSelector from './components/WidgetSelector';
 import { api } from './services/api';
 import { Location } from './types/location';
 import { wixAuth } from './services/wixAuth';
+import { useDarkMode } from './hooks/useDarkMode';
 
 type DashboardState = 'loading' | 'widget-selector' | 'locations';
 
@@ -22,6 +23,7 @@ function App() {
     isOpen: false,
     locationId: null
   });
+  const { isDark, toggle: toggleDarkMode } = useDarkMode();
 
   useEffect(() => {
     const initialize = async () => {
@@ -137,16 +139,16 @@ function App() {
   // Show authentication error if present
   if (authError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/40 flex items-center justify-center">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
-          <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
-            <AlertCircle className="w-6 h-6 text-red-600" />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/40 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 max-w-md w-full">
+          <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 dark:bg-red-900/30 rounded-full mb-4">
+            <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 text-center mb-2">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white text-center mb-2">
             Authentication Error
           </h2>
-          <p className="text-gray-600 text-center mb-4">{authError}</p>
-          <p className="text-sm text-gray-500 text-center">
+          <p className="text-gray-600 dark:text-gray-300 text-center mb-4">{authError}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
             Please ensure you have a valid instance token in the URL.
           </p>
         </div>
@@ -162,20 +164,20 @@ function App() {
   // Show loading state
   if (dashboardState === 'loading') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/40 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/40 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/40">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/40 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
       <Toaster
         position="top-right"
         toastOptions={{
           duration: 4000,
           style: {
-            background: '#363636',
+            background: isDark ? '#1f2937' : '#363636',
             color: '#fff',
           },
           success: {
@@ -192,7 +194,7 @@ function App() {
       />
 
       {/* Header */}
-      <header className="bg-white/95 backdrop-blur-sm border-b border-gray-200/60 shadow-sm">
+      <header className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-b border-gray-200/60 dark:border-gray-700/60 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
@@ -201,24 +203,34 @@ function App() {
                 alt="Mapsy Logo"
                 className="h-8 w-8 object-contain"
               />
-              <h1 className="ml-3 text-2xl font-bold text-gray-900">
+              <h1 className="ml-3 text-2xl font-bold text-gray-900 dark:text-white">
                 Mapsy Dashboard
               </h1>
             </div>
-            {wixAuth.isAuthenticated() && wixAuth.getCompId() && (
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={handleBackToWidgetSelector}
-                  className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 transition"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-1" />
-                  Switch Widget
-                </button>
-                <div className="text-sm text-gray-600">
-                  Widget: <span className="font-mono font-semibold">{wixAuth.getCompId()}</span>
-                </div>
-              </div>
-            )}
+            <div className="flex items-center gap-4">
+              {wixAuth.isAuthenticated() && wixAuth.getCompId() && (
+                <>
+                  <button
+                    onClick={handleBackToWidgetSelector}
+                    className="inline-flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-1" />
+                    Switch Widget
+                  </button>
+                  <div className="text-sm text-gray-600 dark:text-gray-300">
+                    Widget: <span className="font-mono font-semibold">{wixAuth.getCompId()}</span>
+                  </div>
+                </>
+              )}
+              {/* Dark Mode Toggle */}
+              <button
+                onClick={toggleDarkMode}
+                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -228,7 +240,7 @@ function App() {
         <div>
           {/* Action Bar */}
           <div className="mb-6 flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               Manage Locations
             </h2>
             <button
@@ -245,8 +257,8 @@ function App() {
 
           {/* Form or List */}
           {isAddingLocation || selectedLocation ? (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
                 {isAddingLocation ? 'Add New Location' : 'Edit Location'}
               </h3>
               <LocationForm
